@@ -14,6 +14,8 @@ const session = require('./configs/session.config');
 const cors = require('./configs/cors.config');
 require('./configs/passport.config');
 
+const authRouter = require('./routes/auth.routes');
+
 var app = express();
 
 app.use(logger('dev'));
@@ -25,6 +27,7 @@ app.use(session);
 app.use(passport.initialize());
 app.use(passport.session());
 
+app.use('/', authRouter);
 
 // catch 404 and forward to error handler
 app.use(function(req, res, next) {
