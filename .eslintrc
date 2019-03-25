@@ -1,0 +1,7 @@
+{
+  "extends": ["react-app", "plugin:prettier/recommended"],
+  "rules": {
+    "no-console": 2,
+    "quotes": ["error", "single", { "avoidEscape": true }]
+  }
+}
