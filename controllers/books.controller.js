@@ -88,6 +88,7 @@ module.exports.createUserBook = (req, res, next) => {
   }
 };
 
+// Script for adding books in the BDD
 module.exports.createBook = (req, res, next) => {
   const books = hundredBooks;
   for (book of books) {
