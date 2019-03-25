@@ -1,14 +1,15 @@
-const createError = require("http-errors");
-const User = require("../models/user.model");
-const passport = require("passport");
-const LocalStrategy = require("passport-local").Strategy;
+const createError = require('http-errors');
+const User = require('../models/user.model');
+const Goal = require('../models/goal.model');
+const passport = require('passport');
+const LocalStrategy = require('passport-local').Strategy;
 
 module.exports.register = (req, res, next) => {
   const { name, email, password } = req.body;
   User.findOne({ email: email })
     .then(user => {
       if (user) {
-        throw createError(409, "User already registered");
+        throw createError(409, 'User already registered');
       } else {
         return new User(req.body).save();
       }
@@ -18,7 +19,7 @@ module.exports.register = (req, res, next) => {
 };
 
 module.exports.login = (req, res, next) => {
-  passport.authenticate("local-auth", (error, user, message) => {
+  passport.authenticate('local-auth', (error, user, message) => {
     if (error) {
       next(error);
     } else if (!user) {
@@ -39,7 +40,7 @@ module.exports.getUser = (req, res, next) => {
   User.findById(req.user.id)
     .then(user => {
       if (!user) {
-        throw createError(404, "user not found");
+        throw createError(404, 'user not found');
       } else {
         res.json(user);
       }
@@ -61,4 +62,19 @@ module.exports.updateUser = (req, res, next) => {
 module.exports.logout = (req, res, next) => {
   req.logout();
   res.status(204).json();
+};
+
+module.exports.getUserGoals = (req, res, next) => {
+  User.findById(req.user.id)
+    .populate('dailyGoals')
+    .then(user => res.json(user.dailyGoals))
+    .catch(next);
+};
+
+module.exports.createUserGoal = (req, res, next) => {
+  const goal = new Goal(req.body);
+  goal
+    .save()
+    .then(goal => res.status(201).json(goal))
+    .catch(next);
 };
