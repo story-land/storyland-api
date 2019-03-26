@@ -6,7 +6,7 @@ const Book = require('../models/book.model');
 const hundredBooks = require('../100books.json');
 
 module.exports.getBooks = (req, res, next) => {
-  Book.find()
+  Book.find(req.query)
     .then(books => res.json(books))
     .catch(next);
 };
@@ -17,75 +17,11 @@ module.exports.getOneBook = (req, res, next) => {
       if (!book) {
         throw createError(404, 'Book not found');
       } else {
+        console.log(book);
         res.json(book);
       }
     })
     .catch(next);
-};
-
-module.exports.getUserBooks = (req, res, next) => {
-  const { id } = req.body;
-  switch (req.params.id) {
-    case 'read':
-      {
-        Book.find({ readByUser: id })
-          .then(books => {
-            if (!books) {
-              throw createError(404, 'Read books not found');
-            } else {
-              res.json(books);
-            }
-          })
-          .catch(next);
-      }
-      break;
-    case 'pending':
-      {
-        Book.find({ pendingForUser: id })
-          .then(books => {
-            if (!books) {
-              throw createError(404, 'Pending books not found');
-            } else {
-              res.json(books);
-            }
-          })
-          .catch(next);
-      }
-      break;
-  }
-};
-
-module.exports.createUserBook = (req, res, next) => {
-  const { id, type } = req.params;
-  const { userId } = req.body;
-  switch (type) {
-    case 'read':
-      {
-        Book.findByIdAndUpdate(id, { readByUser: userId }, { new: true })
-          .then(book => {
-            if (!book) {
-              throw createError(404, 'Book not found');
-            } else {
-              res.json(book);
-            }
-          })
-          .catch(next);
-      }
-      break;
-    case 'pending':
-      {
-        Book.findByIdAndUpdate(id, { pendingForUser: userId }, { new: true })
-          .then(book => {
-            if (!book) {
-              throw createError(404, 'Book not found');
-            } else {
-              res.json(book);
-            }
-          })
-          .catch(next);
-      }
-      break;
-  }
 };
 
 // Script for adding books in the BDD

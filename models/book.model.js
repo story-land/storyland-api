@@ -46,14 +46,6 @@ const bookSchema = new mongoose.Schema(
     },
     googleRating: {
       type: Number
-    },
-    readByUser: {
-      type: mongoose.Schema.Types.ObjectId,
-      ref: 'User'
-    },
-    pendingForUser: {
-      type: mongoose.Schema.Types.ObjectId,
-      ref: 'User'
     }
   },
   {

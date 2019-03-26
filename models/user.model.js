@@ -3,6 +3,7 @@ const bcrypt = require('bcrypt');
 const SALT_WORK_FACTOR = 10;
 const Goal = require('../models/goal.model');
 const Book = require('../models/book.model');
+const UserBook = require('../models/user-book.model');
 
 const emailPattern = /(.+)@(.+){2,}\.(.+){2,}/i;
 const passwordPattern = /^(?=.*[a-z])(?=.*[A-Z])(?=.*\d){6,}/;
@@ -27,6 +28,9 @@ const userSchema = new mongoose.Schema(
     pagesGoal: {
       type: Number,
       default: 40
+    },
+    favGenres: {
+      type: Array
     }
   },
   {
@@ -48,20 +52,6 @@ userSchema.virtual('dailyGoals', {
   ref: Goal.modelName,
   localField: '_id',
   foreignField: 'user',
-  options: { sort: { position: -1 } }
-});
-
-userSchema.virtual('readBooks', {
-  ref: Book.modelName,
-  localField: '_id',
-  foreignField: 'readByUser',
-  options: { sort: { position: -1 } }
-});
-
-userSchema.virtual('pendingBooks', {
-  ref: Book.modelName,
-  localField: '_id',
-  foreignField: 'pendingForUser',
   options: { sort: { position: -1 } }
 });
 

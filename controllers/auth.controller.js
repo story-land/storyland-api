@@ -1,11 +1,10 @@
 const createError = require('http-errors');
 const User = require('../models/user.model');
-const Goal = require('../models/goal.model');
 const passport = require('passport');
 const LocalStrategy = require('passport-local').Strategy;
 
 module.exports.register = (req, res, next) => {
-  const { name, email, password } = req.body;
+  const { email } = req.body;
   User.findOne({ email: email })
     .then(user => {
       if (user) {
@@ -36,45 +35,7 @@ module.exports.login = (req, res, next) => {
   })(req, res, next);
 };
 
-module.exports.getUser = (req, res, next) => {
-  User.findById(req.user.id)
-    .then(user => {
-      if (!user) {
-        throw createError(404, 'user not found');
-      } else {
-        res.json(user);
-      }
-    })
-    .catch(next);
-};
-
-module.exports.updateUser = (req, res, next) => {
-  delete req.body.email;
-  const user = req.user;
-  Object.keys(req.body).forEach(prop => (user[prop] = req.body[prop]));
-  if (req.file) user.avatarURL = req.file.secure_url;
-  user
-    .save()
-    .then(user => res.status(202).json(user))
-    .catch(next);
-};
-
 module.exports.logout = (req, res, next) => {
   req.logout();
   res.status(204).json();
-};
-
-module.exports.getUserGoals = (req, res, next) => {
-  User.findById(req.user.id)
-    .populate('dailyGoals')
-    .then(user => res.json(user.dailyGoals))
-    .catch(next);
-};
-
-module.exports.createUserGoal = (req, res, next) => {
-  const goal = new Goal(req.body);
-  goal
-    .save()
-    .then(goal => res.status(201).json(goal))
-    .catch(next);
 };
