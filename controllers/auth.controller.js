@@ -8,7 +8,7 @@ module.exports.register = (req, res, next) => {
   User.findOne({ email: email })
     .then(user => {
       if (user) {
-        throw createError(409, 'User already registered');
+        next(createError(409, 'User already registered'));
       } else {
         return new User(req.body).save();
       }
@@ -22,7 +22,7 @@ module.exports.login = (req, res, next) => {
     if (error) {
       next(error);
     } else if (!user) {
-      throw createError(401, message);
+      next(createError(401, message));
     } else {
       req.login(user, error => {
         if (error) {
