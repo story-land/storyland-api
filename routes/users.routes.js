@@ -14,6 +14,6 @@ router.post(
 );
 
 router.get('/goals', secure.isAuthenticated, userController.getGoals);
-router.post('/createGoal', secure.isAuthenticated, userController.createGoal);
+router.post('/creategoal', secure.isAuthenticated, userController.createGoal);
 
 module.exports = router;

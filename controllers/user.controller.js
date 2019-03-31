@@ -166,5 +166,6 @@ module.exports.createGoal = (req, res, next) => {
           .then(goal => res.status(201).json(goal))
           .catch(next);
       }
-    });
+    })
+    .catch(next);
 };
