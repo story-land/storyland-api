@@ -10,12 +10,8 @@ const bookSchema = new mongoose.Schema(
       type: Array,
       required: [true, 'Author is required']
     },
-    description: {
-      type: String
-    },
-    genres: {
-      type: Array
-    },
+    description: String,
+    genres: [String],
     pageCount: {
       type: Number
     },
@@ -61,6 +57,8 @@ const bookSchema = new mongoose.Schema(
     }
   }
 );
+
+bookSchema.index({ description: 'text', title: 'text' });
 
 const Book = mongoose.model('Book', bookSchema);
 

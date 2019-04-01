@@ -3,12 +3,12 @@ const vision = require('@google-cloud/vision');
 
 module.exports.getCoverInfo = file => {
   const client = new vision.ImageAnnotatorClient();
-  const fileName = __dirname + '/padre.jpg';
+  const fileName = __dirname + './padre.jpg';
   return client
     .textDetection(fileName)
     .then(result => {
       let detections = result[0].fullTextAnnotation.text;
-      return Promise.resolve(detections);
+      return Promise.resolve(result[0]);
     })
     .catch(error => console.log(error));
 };
