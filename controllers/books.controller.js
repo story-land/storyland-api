@@ -11,6 +11,12 @@ module.exports.getBooks = (req, res, next) => {
     .catch(next);
 };
 
+module.exports.getSearchBooks = (req, res, next) => {
+  Book.find({ $text: { $search: req.params.search } })
+    .then(books => res.json(books))
+    .catch(next);
+};
+
 module.exports.getOneBook = (req, res, next) => {
   Book.findById(req.params.id)
     .then(book => {
