@@ -12,7 +12,11 @@ module.exports.getBooks = (req, res, next) => {
 };
 
 module.exports.getSearchBooks = (req, res, next) => {
-  Book.find({ $text: { $search: req.params.search } })
+  Book.find(
+    { $text: { $search: req.params.search } },
+    { score: { $meta: 'textScore' } }
+  )
+    .sort({ score: { $meta: 'textScore' } })
     .then(books => res.json(books))
     .catch(next);
 };
