@@ -14,6 +14,11 @@ router.post(
 );
 
 router.get('/goals', secure.isAuthenticated, userController.getGoals);
+router.post(
+  '/goals/:days',
+  secure.isAuthenticated,
+  userController.getLastGoals
+);
 router.post('/creategoal', secure.isAuthenticated, userController.createGoal);
 
 module.exports = router;

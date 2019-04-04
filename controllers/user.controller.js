@@ -129,6 +129,18 @@ module.exports.getGoals = (req, res, next) => {
     .catch(next);
 };
 
+module.exports.getLastGoals = (req, res, next) => {
+  const { days } = req.params;
+  let date = new Date();
+  date.setDate(date.getDate() - days);
+  const userId = req.user.id;
+  Goal.find({ user: userId, updatedAt: { $gt: date } })
+    .limit(Number(days))
+    .sort({ updatedAt: -1 })
+    .then(goals => res.json(goals))
+    .catch(next);
+};
+
 module.exports.createGoal = (req, res, next) => {
   const goalBody = {
     ...req.body,
