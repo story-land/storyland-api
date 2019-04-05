@@ -12,13 +12,34 @@ module.exports.getBooks = (req, res, next) => {
 };
 
 module.exports.getSearchBooks = (req, res, next) => {
+  console.log(req.params.search);
   Book.find(
     { $text: { $search: req.params.search } },
     { score: { $meta: 'textScore' } }
   )
+    .limit(10)
     .sort({ score: { $meta: 'textScore' } })
-    .then(books => res.json(books))
-    .catch(next);
+    .then(books => {
+      if (books) {
+        return res.json(books);
+      } else if (req.params.search.length > 5) {
+        const query = req.params.search.toLowerCase();
+        axiosBook(query).then(response => {
+          const oneBook = parseBookResponse(response.data.items[0]);
+          Book.findOne({ isbn: oneBook.isbn })
+            .then(book => {
+              if (book) {
+                throw createError(409, 'Book already created');
+              } else {
+                console.log('Book created');
+                console.log(oneBook);
+                return new Book(oneBook).save();
+              }
+            })
+            .then(book => res.status(201).json(book));
+        });
+      }
+    });
 };
 
 module.exports.getOneBook = (req, res, next) => {
@@ -27,7 +48,6 @@ module.exports.getOneBook = (req, res, next) => {
       if (!book) {
         throw createError(404, 'Book not found');
       } else {
-        console.log(book);
         res.json(book);
       }
     })
@@ -38,25 +58,23 @@ module.exports.getOneBook = (req, res, next) => {
 module.exports.createBook = (req, res, next) => {
   const books = hundredBooks;
   for (book of books) {
-    const query = book[0].toLowerCase();
-    axiosBook(query)
-      .then(response => {
-        const tenBooks = parseBookResponse(response.data);
-        Book.findOne({ isbn: tenBooks[0].isbn })
-          .then(book => {
-            if (book) {
-              throw createError(409, 'Book already created');
-            } else {
-              return new Book(tenBooks[0]).save();
-            }
-          })
-          .then(book => res.status(201).json(book));
-      })
-      .catch(error => console.log(error));
+    const query = book.toLowerCase();
+    axiosBook(query).then(response => {
+      const oneBook = parseBookResponse(response.data.items[0]);
+      Book.findOne({ isbn: oneBook.isbn })
+        .then(book => {
+          if (book) {
+            throw createError(409, 'Book already created');
+          } else {
+            return new Book(oneBook).save();
+          }
+        })
+        .then(book => res.status(201).json(book));
+    });
   }
 };
 
-axiosBook = query => {
+axiosBook = async function(query) {
   return Promise.resolve(
     axios.get('https://www.googleapis.com/books/v1/volumes', {
       headers: {
@@ -69,45 +87,34 @@ axiosBook = query => {
   );
 };
 
-parseBookResponse = googleResponse => {
-  const tenBooksArray = [];
-  for (let i = 0; i < 10; i++) {
-    const bookObj = {
-      title: googleResponse.items[i].volumeInfo.title,
-      authors:
-        typeof googleResponse.items[i].volumeInfo.authors === Array
-          ? [...googleResponse.items[i].volumeInfo.authors]
-          : googleResponse.items[i].volumeInfo.authors,
-      description: googleResponse.items[i].volumeInfo.description,
-      genres: googleResponse.items[i].volumeInfo.categories,
-      pageCount: googleResponse.items[i].volumeInfo.pageCount,
-      publisher: googleResponse.items[i].volumeInfo.publisher,
-      publishedDate: googleResponse.items[i].volumeInfo.publishedDate,
-      isbn: googleResponse.items[i].volumeInfo.industryIdentifiers
-        ? googleResponse.items[i].volumeInfo.industryIdentifiers[0].identifier
-        : undefined,
-      imageLink: googleResponse.items[i].volumeInfo.imageLinks
-        ? googleResponse.items[i].volumeInfo.imageLinks.thumbnail
-        : undefined,
-      googleId: googleResponse.items[i].id,
-      googlePrice: googleResponse.items[i].saleInfo.retailPrice
-        ? googleResponse.items[i].saleInfo.retailPrice.amount
-        : undefined,
-      googleBuyLink: googleResponse.items[i].saleInfo.buyLink
-        ? googleResponse.items[i].saleInfo.buyLink
-        : undefined,
-      pdfSampleLink: googleResponse.items[i].accessInfo.webReaderLink,
-      googleRating: googleResponse.items[i].volumeInfo.averageRating
-        ? googleResponse.items[i].volumeInfo.averageRating
-        : undefined
-    };
-    let count = 0;
-    for (prop in bookObj) {
-      if (typeof prop === undefined) {
-        count++;
-      }
-    }
-    if (count < 4 || !bookObj.googleBuyLink) tenBooksArray.push(bookObj);
-  }
-  return tenBooksArray;
+parseBookResponse = googleBook => {
+  return {
+    title: googleBook.volumeInfo.title,
+    authors:
+      typeof googleBook.volumeInfo.authors === Array
+        ? [...googleBook.volumeInfo.authors]
+        : googleBook.volumeInfo.authors,
+    description: googleBook.volumeInfo.description,
+    genres: googleBook.volumeInfo.categories,
+    pageCount: googleBook.volumeInfo.pageCount,
+    publisher: googleBook.volumeInfo.publisher,
+    publishedDate: googleBook.volumeInfo.publishedDate,
+    isbn: googleBook.volumeInfo.industryIdentifiers
+      ? googleBook.volumeInfo.industryIdentifiers[0].identifier
+      : undefined,
+    imageLink: googleBook.volumeInfo.imageLinks
+      ? googleBook.volumeInfo.imageLinks.thumbnail
+      : 'https://edition-medali.tn/img/p/fr-default-large_default.jpg',
+    googleId: googleBook.id,
+    googlePrice: googleBook.saleInfo.retailPrice
+      ? googleBook.saleInfo.retailPrice.amount
+      : undefined,
+    googleBuyLink: googleBook.saleInfo.buyLink
+      ? googleBook.saleInfo.buyLink
+      : undefined,
+    pdfSampleLink: googleBook.accessInfo.webReaderLink,
+    googleRating: googleBook.volumeInfo.averageRating
+      ? googleBook.volumeInfo.averageRating
+      : undefined
+  };
 };

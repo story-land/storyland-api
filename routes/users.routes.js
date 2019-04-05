@@ -7,6 +7,7 @@ router.get('/profile', secure.isAuthenticated, userController.getUser);
 router.put('/profile', secure.isAuthenticated, userController.updateUser);
 
 router.get('/books', secure.isAuthenticated, userController.getUserBooks);
+router.get('/books/:id', secure.isAuthenticated, userController.getStateBook);
 router.post(
   '/books/:id',
   secure.isAuthenticated,

@@ -58,7 +58,7 @@ const bookSchema = new mongoose.Schema(
   }
 );
 
-bookSchema.index({ title: 'text', authors: 'text', description: 'text' });
+bookSchema.index({ title: 'text', authors: 'text' });
 
 const Book = mongoose.model('Book', bookSchema);
 

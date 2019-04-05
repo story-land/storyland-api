@@ -44,6 +44,22 @@ module.exports.getUserBooks = (req, res, next) => {
     .catch(next);
 };
 
+module.exports.getStateBook = (req, res, next) => {
+  const search = {
+    user: req.user.id,
+    book: req.params.id
+  };
+  UserBook.find(search)
+    .then(userBook => {
+      if (userBook[0]) {
+        res.json(userBook[0].state);
+      } else {
+        res.json('');
+      }
+    })
+    .catch(next);
+};
+
 module.exports.createUserBook = (req, res, next) => {
   const userBook = new UserBook({
     user: req.user.id,
@@ -62,7 +78,7 @@ module.exports.createUserBook = (req, res, next) => {
               .json('Book added to pending books');
           });
         } else {
-          if (relation.state === 'read') {
+          if (relation.state === 'read' || relation.state === 'reading') {
             UserBook.findByIdAndUpdate(
               relation.id,
               { state: userBook.state },
@@ -94,10 +110,10 @@ module.exports.createUserBook = (req, res, next) => {
             res
               .status(201)
               .json(userBook)
-              .json('Book added to reading books');
+              .json('Book added to read books');
           });
         } else {
-          if (relation.state === 'pending') {
+          if (relation.state === 'pending' || relation.state === 'reading') {
             UserBook.findByIdAndUpdate(
               relation.id,
               { state: userBook.state },
@@ -107,6 +123,41 @@ module.exports.createUserBook = (req, res, next) => {
             )
               .then(userbook =>
                 res.status(200).json('Status book modified to read')
+              )
+              .catch(next);
+          } else {
+            UserBook.findByIdAndRemove(relation.id)
+              .then(userbook =>
+                res.status(204).json('Book removed from your user')
+              )
+              .catch(next);
+          }
+        }
+      })
+      .catch(next);
+  }
+
+  if (userBook.state === 'reading') {
+    UserBook.findOne({ user: userBook.user, book: userBook.book })
+      .then(relation => {
+        if (!relation) {
+          userBook.save().then(userBook => {
+            res
+              .status(201)
+              .json(userBook)
+              .json('Book added to reading books');
+          });
+        } else {
+          if (relation.state === 'pending' || relation.state === 'read') {
+            UserBook.findByIdAndUpdate(
+              relation.id,
+              { state: userBook.state },
+              {
+                new: true
+              }
+            )
+              .then(userbook =>
+                res.status(200).json('Status book modified to reading')
               )
               .catch(next);
           } else {

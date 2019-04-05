@@ -8,7 +8,7 @@ const UserBookSchema = new mongoose.Schema(
     },
     state: {
       type: String,
-      enum: ['pending', 'read']
+      enum: ['pending', 'read', 'reading']
     },
     book: {
       type: mongoose.Schema.Types.ObjectId,
