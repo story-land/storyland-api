@@ -1,4 +1,5 @@
 const createError = require('http-errors');
+const booksService = require('../services/books.service');
 const axios = require('axios');
 const User = require('../models/user.model');
 const Book = require('../models/book.model');
@@ -6,9 +7,7 @@ const Book = require('../models/book.model');
 const hundredBooks = require('../100books.json');
 
 module.exports.getBooks = (req, res, next) => {
-  const { genres } = req.query;
-  const { rating } = req.query;
-  const { year } = req.query;
+  const { genres, rating, year } = req.query;
   const query = {};
   if (rating) {
     query.googleRating = { $gte: rating };
@@ -33,26 +32,19 @@ module.exports.getSearchBooks = (req, res, next) => {
     .limit(10)
     .sort({ score: { $meta: 'textScore' } })
     .then(books => {
-      if (books) {
-        return res.json(books);
-      } else if (req.params.search.length > 5) {
+      if (books && books.length > 0) {
+        res.json(books);
+      } else if (!req.params.search.length > 5) {
+        res.json([]);
+      } else {
         const query = req.params.search.toLowerCase();
-        axiosBook(query).then(response => {
-          const oneBook = parseBookResponse(response.data.items[0]);
-          Book.findOne({ isbn: oneBook.isbn })
-            .then(book => {
-              if (book) {
-                throw createError(409, 'Book already created');
-              } else {
-                console.log('Book created');
-                console.log(oneBook);
-                return new Book(oneBook).save();
-              }
-            })
-            .then(book => res.status(201).json(book));
+        return booksService.findBooks(query).then(books => {
+          books = books.filter(elem => elem.googlePrice).slice(0, 3);
+          return Book.create(books).then(books => res.json(books));
         });
       }
-    });
+    })
+    .catch(next);
 };
 
 module.exports.getOneBook = (req, res, next) => {
