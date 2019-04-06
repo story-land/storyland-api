@@ -6,15 +6,28 @@ const Book = require('../models/book.model');
 const hundredBooks = require('../100books.json');
 
 module.exports.getBooks = (req, res, next) => {
-  Book.find(req.query)
+  const { genres } = req.query;
+  const { rating } = req.query;
+  const { year } = req.query;
+  const query = {};
+  if (rating) {
+    query.googleRating = { $gte: rating };
+  }
+  if (genres) {
+    query.genres = { $in: genres.split(',') };
+  }
+  if (year) {
+    query.publishedDate = { $gte: new Date(year) };
+  }
+
+  Book.find(query)
     .then(books => res.json(books))
     .catch(next);
 };
 
 module.exports.getSearchBooks = (req, res, next) => {
-  console.log(req.params.search);
   Book.find(
-    { $text: { $search: req.params.search } },
+    { $text: { $search: `\"${req.params.search}\"` } },
     { score: { $meta: 'textScore' } }
   )
     .limit(10)
