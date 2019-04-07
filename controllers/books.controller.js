@@ -7,12 +7,16 @@ const Book = require('../models/book.model');
 const hundredBooks = require('../100books.json');
 
 module.exports.getBooks = (req, res, next) => {
-  const { genres, rating, year } = req.query;
+  const { rating, year } = req.query;
+  let { genres } = req.query;
   const query = {};
   if (rating) {
     query.googleRating = { $gte: rating };
   }
   if (genres) {
+    if (genres.includes('@')) {
+      genres = genres.replace('@', '&');
+    }
     query.genres = { $in: genres.split(',') };
   }
   if (year) {
