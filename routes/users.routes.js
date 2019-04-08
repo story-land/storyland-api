@@ -20,8 +20,12 @@ router.post(
   userController.createUserBook
 );
 
-router.get('/friends', secure.isAuthenticated, userController.getSocialUsers);
-router.post('/friends/:id', secure.isAuthenticated, userController.followUser);
+router.get(
+  '/:id/friends',
+  secure.isAuthenticated,
+  userController.getSocialUsers
+);
+router.post('/:id/follow', secure.isAuthenticated, userController.followUser);
 
 router.get('/goals', secure.isAuthenticated, userController.getGoals);
 router.post(

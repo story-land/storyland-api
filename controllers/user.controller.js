@@ -49,32 +49,23 @@ module.exports.getUserBooks = (req, res, next) => {
 };
 
 module.exports.getSocialUsers = (req, res, next) => {
-  const follower = {
-    follower: req.user.id
-  };
-  const followed = {
-    followed: req.user.id
-  };
-
-  Promise.all([
-    Social.find(follower).populate('followed'),
-    Social.find(followed).populate('follower')
-  ])
-    .then(([following, followers]) => {
+  User.findById(req.params.id)
+    .populate('following')
+    .populate('followers')
+    .then(user => {
       const social = {
-        following: following ? following : [],
-        followers: followers ? followers : []
+        following: user.following ? user.following : [],
+        followers: user.followers ? user.followers : []
       };
       res.json(social);
-    })
-    .catch(next);
+    });
 };
 
 module.exports.followUser = (req, res, next) => {
-  const social = {
+  const social = new Social({
     follower: req.user.id,
     followed: req.params.id
-  };
+  });
 
   Social.findOne(social)
     .then(relation => {
