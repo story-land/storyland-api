@@ -78,14 +78,13 @@ module.exports.followUser = (req, res, next) => {
     followed: req.params.id
   };
 
-  Social.find(social)
+  Social.findOne(social)
     .then(relation => {
       if (relation) {
-        console.log('error, ya le sigues');
-        res.status(204).json('follow already');
+        res.status(204).json();
       } else {
-        console.log('seguio');
-        social.save().then(follow => {
+        const newSocial = new Social(social);
+        newSocial.save().then(follow => {
           res.status(201).json(follow);
         });
       }
@@ -99,16 +98,14 @@ module.exports.unfollowUser = (req, res, next) => {
     followed: req.params.id
   };
 
-  Social.find(social)
+  Social.findOne(social)
     .then(relation => {
-      if (relation.id) {
-        console.log('eliminao');
+      if (relation) {
         Social.findByIdAndDelete(relation.id)
-          .then(follow => res.status(204).json('unfollowed'))
+          .then(follow => res.status(204).json())
           .catch(next);
       } else {
-        console.log('no se puede, no le seguias');
-        res.status(204);
+        res.status(204).json();
       }
     })
     .catch(next);

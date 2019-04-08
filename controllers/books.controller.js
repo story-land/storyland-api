@@ -23,10 +23,17 @@ module.exports.getBooks = (req, res, next) => {
     query.publishedDate = { $gte: new Date(year) };
   }
 
-  Book.find(query)
-    .limit(20)
-    .then(books => res.json(books))
-    .catch(next);
+  Book.count(query).then(number => {
+    let random = 0;
+    if (number > 20) {
+      random = Math.floor(Math.random() * (number - 20)) + 1;
+    }
+    Book.find(query)
+      .limit(20)
+      .skip(random)
+      .then(books => res.json(books))
+      .catch(next);
+  });
 };
 
 module.exports.getSearchBooks = (req, res, next) => {
