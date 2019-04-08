@@ -4,7 +4,8 @@ const secure = require('../middlewares/secure.mid');
 const userController = require('../controllers/user.controller');
 const uploader = require('../configs/storage.config');
 
-router.get('/profile', secure.isAuthenticated, userController.getUser);
+router.get('/', secure.isAuthenticated, userController.getAllUsers);
+router.get('/:id/profile', secure.isAuthenticated, userController.getUser);
 router.put(
   '/profile',
   secure.isAuthenticated,
@@ -26,6 +27,11 @@ router.get(
   userController.getSocialUsers
 );
 router.post('/:id/follow', secure.isAuthenticated, userController.followUser);
+router.delete(
+  '/:id/follow',
+  secure.isAuthenticated,
+  userController.unfollowUser
+);
 
 router.get('/goals', secure.isAuthenticated, userController.getGoals);
 router.post(

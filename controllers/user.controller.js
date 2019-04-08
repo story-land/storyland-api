@@ -6,7 +6,7 @@ const Social = require('../models/social.model');
 const Goal = require('../models/goal.model');
 
 module.exports.getUser = (req, res, next) => {
-  User.findById(req.user.id)
+  User.findById(req.params.id)
     .populate('dailyGoals')
     .populate('following')
     .populate('followers')
@@ -16,6 +16,17 @@ module.exports.getUser = (req, res, next) => {
       } else {
         res.json(user);
       }
+    })
+    .catch(next);
+};
+
+module.exports.getAllUsers = (req, res, next) => {
+  User.find()
+    .populate('dailyGoals')
+    .populate('following')
+    .populate('followers')
+    .then(users => {
+      res.json(users);
     })
     .catch(next);
 };
@@ -62,24 +73,42 @@ module.exports.getSocialUsers = (req, res, next) => {
 };
 
 module.exports.followUser = (req, res, next) => {
-  const social = new Social({
+  const social = {
     follower: req.user.id,
     followed: req.params.id
-  });
+  };
 
-  Social.findOne(social)
+  Social.find(social)
     .then(relation => {
-      if (!relation) {
-        social.save().then(follow => {
-          res
-            .status(201)
-            .json(follow)
-            .json('User followed');
-        });
+      if (relation) {
+        console.log('error, ya le sigues');
+        res.status(204).json('follow already');
       } else {
-        Social.findByIdAndRemove(relation.id)
-          .then(follow => res.status(204).json('User unfollowed'))
+        console.log('seguio');
+        social.save().then(follow => {
+          res.status(201).json(follow);
+        });
+      }
+    })
+    .catch(next);
+};
+
+module.exports.unfollowUser = (req, res, next) => {
+  const social = {
+    follower: req.user.id,
+    followed: req.params.id
+  };
+
+  Social.find(social)
+    .then(relation => {
+      if (relation.id) {
+        console.log('eliminao');
+        Social.findByIdAndDelete(relation.id)
+          .then(follow => res.status(204).json('unfollowed'))
           .catch(next);
+      } else {
+        console.log('no se puede, no le seguias');
+        res.status(204);
       }
     })
     .catch(next);
