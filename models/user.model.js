@@ -7,7 +7,6 @@ const UserBook = require('../models/user-book.model');
 
 const emailPattern = /(.+)@(.+){2,}\.(.+){2,}/i;
 const passwordPattern = /^(?=.*[a-z])(?=.*[A-Z])(?=.*\d){6,}/;
-const URL_PATTERN = /[-a-zA-Z0-9@:%_\+.~#?&//=]{2,256}\.[a-z]{2,4}\b(\/[-a-zA-Z0-9@:%_\+.~#?&//=]*)?/gi;
 
 const userSchema = new mongoose.Schema(
   {
@@ -27,8 +26,7 @@ const userSchema = new mongoose.Schema(
       validate: passwordPattern
     },
     avatarURL: {
-      type: String,
-      match: [URL_PATTERN, 'Invalid avatar URL pattern']
+      type: String
     },
     pagesGoal: {
       type: Number,
@@ -64,6 +62,13 @@ userSchema.virtual('following', {
   ref: 'Social',
   localField: '_id',
   foreignField: 'follower',
+  options: { sort: { position: -1 } }
+});
+
+userSchema.virtual('followers', {
+  ref: 'Social',
+  localField: '_id',
+  foreignField: 'followed',
   options: { sort: { position: -1 } }
 });
 

@@ -1,11 +1,15 @@
 const createError = require('http-errors');
 const User = require('../models/user.model');
 const UserBook = require('../models/user-book.model');
+const Book = require('../models/book.model');
+const Social = require('../models/social.model');
 const Goal = require('../models/goal.model');
 
 module.exports.getUser = (req, res, next) => {
   User.findById(req.user.id)
     .populate('dailyGoals')
+    .populate('following')
+    .populate('followers')
     .then(user => {
       if (!user) {
         throw createError(404, 'user not found');
@@ -44,6 +48,52 @@ module.exports.getUserBooks = (req, res, next) => {
     .catch(next);
 };
 
+module.exports.getSocialUsers = (req, res, next) => {
+  const follower = {
+    follower: req.user.id
+  };
+  const followed = {
+    followed: req.user.id
+  };
+
+  Promise.all([
+    Social.find(follower).populate('followed'),
+    Social.find(followed).populate('follower')
+  ])
+    .then(([following, followers]) => {
+      const social = {
+        following: following ? following : [],
+        followers: followers ? followers : []
+      };
+      res.json(social);
+    })
+    .catch(next);
+};
+
+module.exports.followUser = (req, res, next) => {
+  const social = {
+    follower: req.user.id,
+    followed: req.params.id
+  };
+
+  Social.findOne(social)
+    .then(relation => {
+      if (!relation) {
+        social.save().then(follow => {
+          res
+            .status(201)
+            .json(follow)
+            .json('User followed');
+        });
+      } else {
+        Social.findByIdAndRemove(relation.id)
+          .then(follow => res.status(204).json('User unfollowed'))
+          .catch(next);
+      }
+    })
+    .catch(next);
+};
+
 module.exports.getStateBook = (req, res, next) => {
   const search = {
     user: req.user.id,
@@ -72,6 +122,7 @@ module.exports.createUserBook = (req, res, next) => {
       .then(relation => {
         if (!relation) {
           userBook.save().then(userBook => {
+            changeFavGenres(req.user.id, req.params.id);
             res
               .status(201)
               .json(userBook)
@@ -86,9 +137,10 @@ module.exports.createUserBook = (req, res, next) => {
                 new: true
               }
             )
-              .then(userbook =>
-                res.status(200).json('Status book modified to pending')
-              )
+              .then(userbook => {
+                changeFavGenres(req.user.id, req.params.id);
+                res.status(200).json('Status book modified to pending');
+              })
               .catch(next);
           } else {
             UserBook.findByIdAndRemove(relation.id)
@@ -107,6 +159,7 @@ module.exports.createUserBook = (req, res, next) => {
       .then(relation => {
         if (!relation) {
           userBook.save().then(userBook => {
+            changeFavGenres(req.user.id, req.params.id);
             res
               .status(201)
               .json(userBook)
@@ -121,9 +174,10 @@ module.exports.createUserBook = (req, res, next) => {
                 new: true
               }
             )
-              .then(userbook =>
-                res.status(200).json('Status book modified to read')
-              )
+              .then(userbook => {
+                changeFavGenres(req.user.id, req.params.id);
+                res.status(200).json('Status book modified to read');
+              })
               .catch(next);
           } else {
             UserBook.findByIdAndRemove(relation.id)
@@ -142,6 +196,7 @@ module.exports.createUserBook = (req, res, next) => {
       .then(relation => {
         if (!relation) {
           userBook.save().then(userBook => {
+            changeFavGenres(req.user.id, req.params.id);
             res
               .status(201)
               .json(userBook)
@@ -156,9 +211,10 @@ module.exports.createUserBook = (req, res, next) => {
                 new: true
               }
             )
-              .then(userbook =>
-                res.status(200).json('Status book modified to reading')
-              )
+              .then(userbook => {
+                changeFavGenres(req.user.id, req.params.id);
+                res.status(200).json('Status book modified to reading');
+              })
               .catch(next);
           } else {
             UserBook.findByIdAndRemove(relation.id)
@@ -170,6 +226,43 @@ module.exports.createUserBook = (req, res, next) => {
         }
       })
       .catch(next);
+  }
+
+  function changeFavGenres(user, book) {
+    Book.findById(book).then(book => {
+      const genre = book.genres[0];
+      User.findById(user)
+        .then(user => {
+          let actualGenres = user.favGenres;
+          if (!actualGenres.includes(genre)) {
+            if (actualGenres.length >= 2) {
+              actualGenres.pop();
+              actualGenres.unshift(genre);
+              User.findByIdAndUpdate(
+                user.id,
+                { favGenres: actualGenres },
+                {
+                  new: true
+                }
+              )
+                .then()
+                .catch(error => console.log(error));
+            } else {
+              actualGenres.unshift(genre);
+              User.findByIdAndUpdate(
+                user.id,
+                { favGenres: actualGenres },
+                {
+                  new: true
+                }
+              )
+                .then()
+                .catch(error => console.log(error));
+            }
+          }
+        })
+        .catch(error => console.log(error));
+    });
   }
 };
 
