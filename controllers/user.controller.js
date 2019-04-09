@@ -25,6 +25,7 @@ module.exports.getAllUsers = (req, res, next) => {
     .populate('dailyGoals')
     .populate('following')
     .populate('followers')
+    .populate('userbooks')
     .then(users => {
       res.json(users);
     })

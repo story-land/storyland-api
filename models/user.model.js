@@ -72,6 +72,13 @@ userSchema.virtual('followers', {
   options: { sort: { position: -1 } }
 });
 
+userSchema.virtual('userbooks', {
+  ref: 'UserBook',
+  localField: '_id',
+  foreignField: 'user',
+  options: { sort: { position: -1 } }
+});
+
 userSchema.pre('save', function(next) {
   const user = this;
 
