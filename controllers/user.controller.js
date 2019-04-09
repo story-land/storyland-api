@@ -10,6 +10,7 @@ module.exports.getUser = (req, res, next) => {
     .populate('dailyGoals')
     .populate('following')
     .populate('followers')
+    .populate('userbooks')
     .then(user => {
       if (!user) {
         throw createError(404, 'user not found');
