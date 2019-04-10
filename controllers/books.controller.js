@@ -1,10 +1,6 @@
 const createError = require('http-errors');
 const booksService = require('../services/books.service');
-const axios = require('axios');
-const User = require('../models/user.model');
 const Book = require('../models/book.model');
-
-const hundredBooks = require('../100books.json');
 
 module.exports.getBooks = (req, res, next) => {
   const { rating, year } = req.query;
@@ -134,69 +130,4 @@ module.exports.getRegisterBooks = (req, res, next) => {
       res.json(newBooks);
     })
     .catch(next);
-};
-
-// Script for adding books in the BDD
-module.exports.createBook = (req, res, next) => {
-  const books = hundredBooks;
-  for (book of books) {
-    const query = book.toLowerCase();
-    axiosBook(query).then(response => {
-      const oneBook = parseBookResponse(response.data.items[0]);
-      Book.findOne({ isbn: oneBook.isbn })
-        .then(book => {
-          if (book) {
-            throw createError(409, 'Book already created');
-          } else {
-            return new Book(oneBook).save();
-          }
-        })
-        .then(book => res.status(201).json(book));
-    });
-  }
-};
-
-axiosBook = async function(query) {
-  return Promise.resolve(
-    axios.get('https://www.googleapis.com/books/v1/volumes', {
-      headers: {
-        key: process.env.GBOOKS_API_KEY
-      },
-      params: {
-        q: query
-      }
-    })
-  );
-};
-
-parseBookResponse = googleBook => {
-  return {
-    title: googleBook.volumeInfo.title,
-    authors:
-      typeof googleBook.volumeInfo.authors === Array
-        ? [...googleBook.volumeInfo.authors]
-        : googleBook.volumeInfo.authors,
-    description: googleBook.volumeInfo.description,
-    genres: googleBook.volumeInfo.categories,
-    pageCount: googleBook.volumeInfo.pageCount,
-    publisher: googleBook.volumeInfo.publisher,
-    publishedDate: googleBook.volumeInfo.publishedDate,
-    isbn: googleBook.volumeInfo.industryIdentifiers
-      ? googleBook.volumeInfo.industryIdentifiers[0].identifier
-      : undefined,
-    imageLink: googleBook.volumeInfo.imageLinks
-      ? googleBook.volumeInfo.imageLinks.thumbnail
-      : 'https://edition-medali.tn/img/p/fr-default-large_default.jpg',
-    googleId: googleBook.id,
-    googlePrice: googleBook.saleInfo.retailPrice
-      ? googleBook.saleInfo.retailPrice.amount
-      : undefined,
-    googleBuyLink: googleBook.saleInfo.buyLink
-      ? googleBook.saleInfo.buyLink
-      : undefined,
-    pdfSampleLink: googleBook.accessInfo.webReaderLink,
-    googleRating: googleBook.volumeInfo.averageRating
-      ? googleBook.volumeInfo.averageRating
-      : undefined
-  };
 };

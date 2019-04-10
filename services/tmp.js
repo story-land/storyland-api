@@ -1,4 +1,4 @@
-const service = require('./visionService');
+const service = require('./vision.service');
 
 service
   .getCoverInfo()
