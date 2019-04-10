@@ -1,5 +1,6 @@
 const createError = require('http-errors');
 const booksService = require('../services/books.service');
+const visionService = require('../services/vision.service');
 const Book = require('../models/book.model');
 
 module.exports.getBooks = (req, res, next) => {
@@ -130,4 +131,40 @@ module.exports.getRegisterBooks = (req, res, next) => {
       res.json(newBooks);
     })
     .catch(next);
+};
+
+module.exports.scanCover = (req, res, next) => {
+  if (!req.file) {
+    res.status(204).json(false);
+  } else {
+    const coverUrl = req.file.secure_url;
+    visionService
+      .getCoverInfo(coverUrl)
+      .then(result => {
+        const query = result.slice(0, 3).join(' ');
+        Book.find(
+          { $text: { $search: query } },
+          { score: { $meta: 'textScore' } }
+        )
+          .limit(10)
+          .sort({ score: { $meta: 'textScore' } })
+          .then(books => {
+            if (books && books.length > 0) {
+              res.json(books);
+            } else if (!req.params.search.length > 5) {
+              res.json([]);
+            } else {
+              return booksService
+                .findBooks(query)
+                .then(books => {
+                  books = books.filter(elem => elem.googlePrice).slice(0, 3);
+                  return Book.create(books).then(books => res.json(books));
+                })
+                .catch(next);
+            }
+          })
+          .catch(next);
+      })
+      .catch(next);
+  }
 };
