@@ -10,6 +10,7 @@ const mongoose = require('mongoose');
 const passport = require('passport');
 
 require('./configs/db.config');
+require('./configs/vision.config');
 const session = require('./configs/session.config');
 const cors = require('./configs/cors.config');
 require('./configs/passport.config');

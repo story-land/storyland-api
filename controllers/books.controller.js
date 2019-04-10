@@ -141,6 +141,7 @@ module.exports.scanCover = (req, res, next) => {
     visionService
       .getCoverInfo(coverUrl)
       .then(result => {
+        console.log(result);
         const query = result.slice(0, 3).join(' ');
         Book.find(
           { $text: { $search: query } },
