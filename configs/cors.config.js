@@ -2,6 +2,7 @@ const createError = require('http-errors');
 const cors = require('cors');
 
 const allowedOrigins = [
+  process.env.URL_APP,
   'https://storyland-api.herokuapp.com/',
   'http://localhost:3000'
 ];
