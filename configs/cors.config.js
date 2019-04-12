@@ -3,8 +3,8 @@ const cors = require('cors');
 
 const allowedOrigins = [
   process.env.URL_APP,
-  'https://storyland-api.herokuapp.com/',
-  'https://storyland.herokuapp.com/',
+  'https://storyland-api.herokuapp.com',
+  'https://storyland.herokuapp.com',
   'http://localhost:3000'
 ];
 
